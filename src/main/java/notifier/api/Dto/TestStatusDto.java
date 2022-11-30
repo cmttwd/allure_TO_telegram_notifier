@@ -10,6 +10,6 @@ import lombok.Setter;
 public class TestStatusDto {
 
     private String status;
-    private int count;
+    private long count;
 
 }

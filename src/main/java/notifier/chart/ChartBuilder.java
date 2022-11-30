@@ -1,7 +1,7 @@
 package notifier.chart;
 
+import notifier.model.LaunchInfo;
 import notifier.model.Status;
-import notifier.model.StatusData;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.PieChart;
 import org.knowm.xchart.PieChartBuilder;
@@ -24,8 +24,8 @@ public class ChartBuilder {
     private static final Color BACKGROUND_COLOR = new Color(24, 37, 51);
     private static final Color FONT_COLOR = Color.WHITE;
 
-    public static byte[] getChartImage(StatusData data) {
-        BufferedImage chartImage = BitmapEncoder.getBufferedImage(createChart(data));
+    public static byte[] getChartImage(LaunchInfo launchInfo) {
+        BufferedImage chartImage = BitmapEncoder.getBufferedImage(createChart(launchInfo));
 
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -36,9 +36,9 @@ public class ChartBuilder {
         }
     }
 
-    private static PieChart createChart(StatusData data) {
+    private static PieChart createChart(LaunchInfo launchInfo) {
         PieChart chart = new PieChartBuilder()
-                .title(data.getTitle())
+                .title(launchInfo.getLaunchName())
                 .width(500)
                 .height(250)
                 .build();
@@ -70,7 +70,7 @@ public class ChartBuilder {
                 .setDecimalPattern("#");
 
 
-        List<Color> colors = addSeriesTo(chart, data.getStatuses());
+        List<Color> colors = addSeriesTo(chart, launchInfo.getStatuses());
 
         chart.getStyler().setSeriesColors(colors.toArray(new Color[0]));
 

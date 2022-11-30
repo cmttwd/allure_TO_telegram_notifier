@@ -13,7 +13,7 @@ public class LaunchInfo {
     private String launchName;
     private String env;
     private String duration;
-    private Map<Status, Integer> statuses;
+    private Map<Status, Long> statuses;
     private String launchId;
     private List<StatusData> epicsStatus;
 
