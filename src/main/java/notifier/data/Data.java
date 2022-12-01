@@ -25,28 +25,47 @@ public class Data {
         List<EnvVarValueDto> launchEnv = AllureApi.getEnvByLaunch(launchId);
         List<TestStatusDto> launchStatistic = AllureApi.getLaunchStatistic(launchId);
         List<TestResultDto> testResult = AllureApi.getTestResultByLaunchId(launchId);
+        List<DefectCountRowDto> defects = AllureApi.getDefectsByLaunchId(launchId);
         log.info("All data by LAUNCH - {} received", launchId);
 
 
         LaunchInfo.LaunchInfoBuilder launchInfoBuilder = LaunchInfo.builder();
 
-        launchInfoBuilder.launchId(launchId);
-
+        // launchName
         launchInfoBuilder.launchName(launchDetails.getName());
 
-        String envString = launchEnv.stream()
-                .map(envVarValueDto -> envVarValueDto.getVariable().getName() + "=" + envVarValueDto.getName())
-                .collect(Collectors.joining("; "));
-        launchInfoBuilder.env(envString);
+        // launchId
+        launchInfoBuilder.launchId(launchId);
 
+        // startTime
+        launchInfoBuilder.startTime(DateHelper.localDateTimeToString(DateHelper.getDateTimeFromMilliseconds(launchDetails.getCreatedDate())));
+
+        // tags
+        launchInfoBuilder.tags(launchDetails.getTags().stream().map(IdAndNameDto::getName).collect(Collectors.toList()));
+
+        // env
+        Map<String, String> envMap = launchEnv.stream().map(envVarValueDto -> Map.of(envVarValueDto.getVariable().getName(), envVarValueDto.getName()))
+                .flatMap(it -> it.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.joining("; "))));
+
+        launchInfoBuilder.env(envMap);
+
+        // statuses
         launchInfoBuilder.statuses(launchStatistic.stream()
                 .collect(Collectors.toMap(status -> Status.getStatus(status.getStatus()), TestStatusDto::getCount)));
 
+        // duration
         long amountDuration = testResult.stream()
                 .mapToLong(TestResultDto::getDuration)
                 .sum();
         launchInfoBuilder.duration(DateHelper.millisecondsToHoursMinSec(amountDuration));
 
+        // defects
+        launchInfoBuilder.defects(defects.stream()
+                .map(defectCountRowDto -> new LaunchInfo.StringIntPair(defectCountRowDto.getName(), defectCountRowDto.getCount()))
+                .collect(Collectors.toList()));
+
+        // epicsStatus
         launchInfoBuilder.epicsStatus(getStatusDataByEpic(launchDetails, testResult));
 
         return launchInfoBuilder.build();

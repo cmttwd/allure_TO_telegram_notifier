@@ -18,11 +18,11 @@ public class AllureApi {
 
     public static final String launchStatistic = "/launch/{id}/statistic";
     public static final String launchEnv = "/launch/{id}/env";
+    public static final String launchDefect = "/launch/{id}/defect";
     public static final String launchById = "/launch/{id}";
 
     public static final String cf = "/cf";
     public static final String cfSuggest = "/cfv/suggest";
-
 
 
     public static String getLaunchIdByJobId(String jobId) {
@@ -69,8 +69,7 @@ public class AllureApi {
     }
 
 
-
-    public static PageTestResultDto getPageTestResultByLaunchId(String id, int page) {
+    private static PageTestResultDto getPageTestResultByLaunchId(String id, int page) {
         log.info("[AllureApi] getPageTestResultByLaunchId - {}, {}", id, page);
 
         Map<String, Object> params = new HashMap<>();
@@ -91,7 +90,7 @@ public class AllureApi {
         }
     }
 
-    public static List<TestResultDto> getTestResultByLaunchId(String id){
+    public static List<TestResultDto> getTestResultByLaunchId(String id) {
         List<TestResultDto> result = new ArrayList<>();
         int page = 0;
         do {
@@ -104,6 +103,39 @@ public class AllureApi {
         return result;
     }
 
+
+    private static PageDefectCountRowDto getPageDefectsByLaunchId(String id, int page) {
+        log.info("[AllureApi] getPageDefectsByLaunchId - {}, {}", id, page);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("size", 2000);
+        params.put("page", page);
+
+        try {
+            return given().spec(Specs.allureRequest)
+                    .queryParams(params)
+                    .get(launchDefect, id)
+                    .then()
+                    .statusCode(200)
+                    .extract()
+                    .as(PageDefectCountRowDto.class);
+        } catch (AssertionError e) {
+            throw new RuntimeException(String.format("[DefectsByLaunchId] Get data ERROR: %s\n%s", id, e.getMessage()));
+        }
+    }
+
+    public static List<DefectCountRowDto> getDefectsByLaunchId(String id) {
+        List<DefectCountRowDto> result = new ArrayList<>();
+        int page = 0;
+        do {
+            PageDefectCountRowDto defects = getPageDefectsByLaunchId(id, page);
+            result.addAll(defects.getContent());
+            page++;
+            if (page >= defects.getTotalPages()) break;
+        } while (page < 10);
+
+        return result;
+    }
 
     public static PageTestResultRowDto pageTestResultSearchByCfAndLaunchId(Integer projectId, String customFieldName, String customFieldValue, Integer launchId, int page) {
 
@@ -128,7 +160,7 @@ public class AllureApi {
         }
     }
 
-    public static List<TestResultRowDto> testResultSearchByCfAndLaunchId(Integer projectId, String customFieldName, String customFieldValue, Integer launchId){
+    public static List<TestResultRowDto> testResultSearchByCfAndLaunchId(Integer projectId, String customFieldName, String customFieldValue, Integer launchId) {
         List<TestResultRowDto> result = new ArrayList<>();
 
         int page = 0;
@@ -168,12 +200,12 @@ public class AllureApi {
 
         try {
             return Arrays.stream(given().spec(Specs.allureRequest)
-                    .queryParams(params)
-                    .get(cf)
-                    .then()
-                    .statusCode(200)
-                    .extract()
-                    .as(IdAndNameDto[].class))
+                            .queryParams(params)
+                            .get(cf)
+                            .then()
+                            .statusCode(200)
+                            .extract()
+                            .as(IdAndNameDto[].class))
                     .collect(Collectors.toList());
         } catch (AssertionError e) {
             throw new RuntimeException(String.format("[CustomFieldsByLaunchId] Get data ERROR: %s\n%s", projectId, e.getMessage()));
@@ -190,13 +222,13 @@ public class AllureApi {
 
         try {
             return given().spec(Specs.allureRequest)
-                            .queryParams(params)
-                            .get(cfSuggest)
-                            .then()
-                            .statusCode(200)
-                            .extract()
-                            .jsonPath()
-                            .getList("content", IdAndNameDto.class);
+                    .queryParams(params)
+                    .get(cfSuggest)
+                    .then()
+                    .statusCode(200)
+                    .extract()
+                    .jsonPath()
+                    .getList("content", IdAndNameDto.class);
         } catch (AssertionError e) {
             throw new RuntimeException(String.format("[CustomFieldsValues] Get data ERROR: %s", e.getMessage()));
         }

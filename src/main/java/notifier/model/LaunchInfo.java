@@ -11,10 +11,27 @@ import java.util.Map;
 public class LaunchInfo {
 
     private String launchName;
-    private String env;
-    private String duration;
-    private Map<Status, Long> statuses;
     private String launchId;
+
+    private Map<String, String> env;
+    private List<String> tags;
+
+    private String startTime;
+    private String duration;
+
+    private Map<Status, Long> statuses;
+    private List<StringIntPair> defects;
     private List<StatusData> epicsStatus;
 
+
+    @Getter
+    public static class StringIntPair {
+        public String string;
+        public Integer integer;
+
+        public StringIntPair(String string, Integer integer) {
+            this.string = string;
+            this.integer = integer;
+        }
+    }
 }
