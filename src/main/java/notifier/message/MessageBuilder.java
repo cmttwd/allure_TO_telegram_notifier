@@ -15,22 +15,22 @@ import static notifier.Parameters.getParameters;
 @Log4j2
 public class MessageBuilder {
 
-
-    public static String getMessage(LaunchInfo launchInfo) {
+    public static String getCaption(LaunchInfo launchInfo){
         StringBuilder sb = new StringBuilder();
 
-        launchInfo.getEpicsStatus().forEach(statusData -> {
-            sb.append(getStatisticByEpic(statusData));
-        });
+        sb.append("<code>Launch ID: </code>").append(launchInfo.getLaunchId()).append("\n");
+        sb.append("<code>Время запуска: </code>").append(launchInfo.getStartTime()).append("\n");
+        sb.append("<code>Общая продолжительность на 1 поток: </code>").append(launchInfo.getDuration()).append("\n\n");
 
-        sb.append("\n\n");
+        String launchTags = launchInfo.getTags().stream().map(s -> "[ " + s + " ]").collect(Collectors.joining(" "));
+        sb.append("<code>Теги: </code>").append(launchTags).append("\n\n");
 
-        sb.append("Launch ID: ").append(launchInfo.getLaunchId()).append("\n");
-        sb.append("Общая продолжительность: ").append(launchInfo.getDuration()).append("\n");
-        sb.append("Environment:\n").append("<code>").append(launchInfo.getEnv()).append("</code>").append("\n\n");
+        // Environment
+        sb.append(launchInfo.getEnv().entrySet().stream()
+                .map(stringStringEntry -> stringStringEntry.getKey() + " = <code>" + stringStringEntry.getValue() + "</code>")
+                .collect(Collectors.joining("\n"))).append("\n\n");
 
         URI uri = UriBuilder.fromUri(URI.create(getParameters().getAllureUri())).replacePath("/launch/" + launchInfo.getLaunchId()).build();
-
         sb.append(uri);
 
         return sb.toString();
@@ -53,4 +53,19 @@ public class MessageBuilder {
     }
 
 
+    public static String getDefectsMessage(LaunchInfo launchInfo) {
+       return launchInfo.getDefects().stream().limit(7)
+                .map(stringIntPair -> "<code>" + stringIntPair.string + "</code> - " + stringIntPair.integer)
+                .collect(Collectors.joining("\n"));
+    }
+
+    public static String getEpicsStatisticMessage(LaunchInfo launchInfo) {
+        StringBuilder sb = new StringBuilder();
+
+        launchInfo.getEpicsStatus().forEach(statusData -> {
+            sb.append(getStatisticByEpic(statusData));
+        });
+
+        return sb.toString();
+    }
 }

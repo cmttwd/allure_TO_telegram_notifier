@@ -4,12 +4,10 @@ import lombok.extern.log4j.Log4j2;
 import notifier.api.TelegramApi;
 import notifier.chart.ChartBuilder;
 import notifier.data.Data;
-import notifier.helpers.StringHelpers;
 import notifier.message.MessageBuilder;
 import notifier.model.LaunchInfo;
 
 import java.util.Date;
-import java.util.List;
 
 import static notifier.Parameters.getParameters;
 
@@ -28,19 +26,22 @@ public class Main {
         try {
             LaunchInfo launchInfo = Data.getLaunchInfo(getParameters().getAllureBuildId());
 
-            String message = MessageBuilder.getMessage(launchInfo);
+            String caption = MessageBuilder.getCaption(launchInfo);
+            String defectsMessage = MessageBuilder.getDefectsMessage(launchInfo);
+            String epicsStatuses = MessageBuilder.getEpicsStatisticMessage(launchInfo);
 
             byte[] chartImage = ChartBuilder.getChartImage(launchInfo);
 
             long duration = new Date().getTime() - start.getTime();
-            if (duration > 120_000) message = message + "\n\n Превышено время формирования отчета: " + duration;
+            if (duration > 120_000) caption = caption + "\n\n Превышено время формирования отчета: " + duration;
 
+            String[] chatIds = getParameters().getTelegramChatId().replaceAll("\n", "").split(",");
 
-            List<String> messageList = StringHelpers.splitStringByCharsCount(message, 1000);
+            for (String id: chatIds){
+                log.info("SEND MESSAGE to Telegram chat: {}", id);
 
-            for (int i = 0; i < messageList.size(); i++) {
-                if (i == 0) TelegramApi.sendPhotoWithText(chartImage, messageList.get(i));
-                else TelegramApi.sendText(messageList.get(i));
+                TelegramApi.sendPhotoWithText(chartImage, caption, id);
+                TelegramApi.sendText(defectsMessage + "\n" + epicsStatuses, id);
             }
 
         } catch (Exception e) {

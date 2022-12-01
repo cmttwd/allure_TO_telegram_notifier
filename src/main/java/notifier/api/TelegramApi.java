@@ -15,10 +15,10 @@ import static notifier.Parameters.getParameters;
 
 public class TelegramApi {
 
-    public static void sendPhotoWithTextApi(byte[] photo, String text) {
+    public static void sendPhotoWithTextApi(byte[] photo, String text, String chatId) {
         given().spec(Specs.telegramRequest)
                 .multiPart("photo", "image.png", new ByteArrayInputStream(photo), "image/png")
-                .multiPart("chat_id", getParameters().getTelegramChatId())
+                .multiPart("chat_id", chatId)
                 .multiPart("caption", text)
                 .params("disable_notification", true)
                 .post("/bot{token}/sendPhoto", getParameters().getTelegramToken())
@@ -26,26 +26,26 @@ public class TelegramApi {
                 .statusCode(200);
     }
 
-    public static void sendTextApi(String text) {
+    public static void sendTextApi(String text, String chatId) {
         given().spec(Specs.telegramRequest)
-                .multiPart("chat_id", getParameters().getTelegramChatId())
+                .multiPart("chat_id", chatId)
                 .multiPart("text", text)
                 .post("/bot{token}/sendMessage", getParameters().getTelegramToken())
                 .then()
                 .statusCode(200);
     }
 
-    public static void sendText(String text) throws TelegramApiException {
+    public static void sendText(String text, String chatId) throws TelegramApiException {
         getSender().execute(SendMessage.builder()
-                .chatId(getParameters().getTelegramChatId())
+                .chatId(chatId)
                 .text(text)
                 .parseMode("HTML")
                 .build());
     }
 
-    public static void sendPhotoWithText(byte[] photo, String text) throws TelegramApiException {
+    public static void sendPhotoWithText(byte[] photo, String text, String chatId) throws TelegramApiException {
         getSender().execute(SendPhoto.builder()
-                .chatId(getParameters().getTelegramChatId())
+                .chatId(chatId)
                 .photo(new InputFile(new ByteArrayInputStream(photo), "image.png"))
                 .parseMode("HTML")
                 .caption(text)
