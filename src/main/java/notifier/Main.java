@@ -35,13 +35,13 @@ public class Main {
             long duration = new Date().getTime() - start.getTime();
             if (duration > 120_000) caption = caption + "\n\n Превышено время формирования отчета: " + duration;
 
-            String[] chatIds = getParameters().getTelegramChatId().replaceAll("\n", "").split(",");
+            String[] chatIds = getParameters().getTelegramChatId().replaceAll(" ", "").split(",");
 
             for (String id: chatIds){
                 log.info("SEND MESSAGE to Telegram chat: {}", id);
 
                 TelegramApi.sendPhotoWithText(chartImage, caption, id);
-                TelegramApi.sendText(defectsMessage + "\n" + epicsStatuses, id);
+                TelegramApi.sendText("Дефекты: \n" + defectsMessage + "\n**********************" + epicsStatuses, id);
             }
 
         } catch (Exception e) {
