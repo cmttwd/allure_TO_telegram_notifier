@@ -41,6 +41,8 @@ public class MessageBuilder {
         if (statusData.getStatuses().isEmpty()) return "";
 
         Long pass = statusData.getStatuses().get(Status.PASSED);
+        if(pass == null) pass = 0L;
+
         long total = statusData.getStatuses().values().stream().mapToLong(v -> v).sum();
 
         String percent = StringHelpers.getPercent(total, pass);
